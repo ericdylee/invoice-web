@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Cache-Control': 'public, max-age=0',
+        'Cache-Control': 'private, no-store',
       },
     })
   } catch (error) {
