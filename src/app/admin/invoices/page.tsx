@@ -9,6 +9,7 @@ import { SearchBar } from '@/components/admin/search-bar'
 import { FilterPanel } from '@/components/admin/filter-panel'
 import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { FileSearch, FileX } from 'lucide-react'
 import type { InvoiceStatus } from '@/types/invoice'
 
 interface InvoicesPageProps {
@@ -51,18 +52,21 @@ async function InvoiceListContent({
     : await getInvoicesFromNotion(10, cursor, sort)
 
   if (invoices.length === 0) {
+    const EmptyIcon = hasFilters ? FileSearch : FileX
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">
-            {hasFilters ? '검색 결과가 없습니다' : '견적서가 없습니다'}
-          </p>
-          {!hasFilters && (
-            <p className="text-muted-foreground mt-2 text-sm">
-              Notion에 견적서를 추가해주세요
-            </p>
-          )}
+      <div className="border-border flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed">
+        {/* 빈 상태 아이콘 */}
+        <div className="bg-muted mb-4 rounded-full p-4">
+          <EmptyIcon className="text-muted-foreground h-8 w-8" />
         </div>
+        <h3 className="text-foreground mb-1 text-sm font-semibold">
+          {hasFilters ? '검색 결과 없음' : '견적서가 없습니다'}
+        </h3>
+        <p className="text-muted-foreground max-w-xs text-center text-sm">
+          {hasFilters
+            ? '다른 검색어나 필터를 사용해보세요'
+            : 'Notion에 견적서를 추가하면 이곳에 표시됩니다'}
+        </p>
       </div>
     )
   }
@@ -121,21 +125,26 @@ export default async function InvoicesPage({
   return (
     <div className="space-y-6">
       {/* 페이지 헤더 */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">견적서 목록</h1>
-        <p className="text-muted-foreground mt-2">
+      <div className="border-b pb-5">
+        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-widest uppercase">
+          견적서
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight">견적서 목록</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
           발행한 모든 견적서를 확인하고 관리할 수 있습니다
         </p>
       </div>
 
       {/* 검색 및 필터 UI */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SearchBar defaultValue={filters.query} />
-        <FilterPanel
-          defaultStatus={filters.status}
-          defaultDateFrom={filters.dateFrom}
-          defaultDateTo={filters.dateTo}
-        />
+        <div className="flex shrink-0 items-center gap-2">
+          <FilterPanel
+            defaultStatus={filters.status}
+            defaultDateFrom={filters.dateFrom}
+            defaultDateTo={filters.dateTo}
+          />
+        </div>
       </div>
 
       {/* 견적서 테이블 (Suspense로 래핑) */}

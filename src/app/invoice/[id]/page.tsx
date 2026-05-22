@@ -6,6 +6,10 @@ import { InvoiceSummary } from '@/components/invoice/InvoiceSummary'
 import { PDFDownloadButton } from '@/components/invoice/PDFDownloadButton'
 import { InvoiceSkeleton } from '@/components/invoice/InvoiceSkeleton'
 import { getOptimizedInvoice } from '@/lib/services/invoice.service'
+import {
+  isValidNotionPageId,
+  normalizeNotionPageId,
+} from '@/lib/utils/validation'
 import { notFound } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { Suspense } from 'react'
@@ -27,8 +31,12 @@ export async function generateMetadata({
 }: InvoicePageProps): Promise<Metadata> {
   const { id } = await params
 
+  const fallback = { title: '견적서 조회', description: '견적서를 확인하세요' }
+
+  if (!isValidNotionPageId(id)) return fallback
+
   try {
-    const invoice = await getOptimizedInvoice(id)
+    const invoice = await getOptimizedInvoice(normalizeNotionPageId(id))
 
     return {
       title: `견적서 ${invoice.invoiceNumber}`,
@@ -40,10 +48,7 @@ export async function generateMetadata({
       },
     }
   } catch {
-    return {
-      title: '견적서 조회',
-      description: '견적서를 확인하세요',
-    }
+    return fallback
   }
 }
 
@@ -54,13 +59,17 @@ export async function generateMetadata({
  * 이를 통해 점진적 로딩과 스켈레톤 UI를 제공
  */
 async function InvoiceContent({ id }: { id: string }) {
-  // 최적화된 견적서 조회 (캐싱 + Request Deduplication)
+  if (!isValidNotionPageId(id)) {
+    notFound()
+  }
+
+  const normalizedId = normalizeNotionPageId(id)
+
   let invoiceData
   try {
-    invoiceData = await getOptimizedInvoice(id)
+    invoiceData = await getOptimizedInvoice(normalizedId)
   } catch (error) {
     console.error('견적서 조회 실패:', error)
-    // 에러 발생 시 404 페이지로 리다이렉트
     notFound()
   }
 
@@ -71,20 +80,20 @@ async function InvoiceContent({ id }: { id: string }) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="bg-muted/30 flex-1">
+      <main className="bg-muted/20 flex-1">
         <div className="container mx-auto px-4 py-8 sm:py-12">
           {/* 페이지 타이틀 */}
-          <div className="mx-auto mb-6 max-w-3xl">
-            <h1 className="text-foreground text-3xl font-bold sm:text-4xl">
+          <div className="mx-auto mb-8 max-w-3xl">
+            <p className="text-muted-foreground mb-1 text-xs font-medium tracking-widest uppercase">
               견적서 조회
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              견적서의 상세 내용을 확인하실 수 있습니다.
             </p>
+            <h1 className="text-foreground text-2xl font-bold sm:text-3xl">
+              {invoiceData.clientName} 님의 견적서
+            </h1>
           </div>
 
           {/* 견적서 콘텐츠 */}
-          <div className="mx-auto max-w-3xl space-y-8">
+          <div className="mx-auto max-w-3xl space-y-5">
             {/* 견적서 헤더 */}
             <InvoiceHeader invoice={invoiceData} />
 
@@ -98,15 +107,19 @@ async function InvoiceContent({ id }: { id: string }) {
             <InvoiceSummary invoice={invoiceData} />
 
             {/* 구분선 */}
-            <Separator className="my-8" />
+            <Separator className="my-6" />
 
             {/* 액션 버튼 영역 */}
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <PDFDownloadButton invoice={invoiceData} size="lg" />
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <PDFDownloadButton
+                invoice={invoiceData}
+                size="lg"
+                className="w-full sm:w-auto"
+              />
             </div>
 
             {/* 안내 메시지 */}
-            <div className="bg-card text-muted-foreground rounded-lg border p-4 text-center text-sm">
+            <div className="bg-muted/40 text-muted-foreground rounded-lg border border-dashed px-5 py-4 text-center text-sm">
               <p>
                 견적서에 대한 문의사항이 있으시면 발행자에게 직접 연락해 주세요.
               </p>

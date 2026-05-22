@@ -62,28 +62,39 @@ export function Pagination({
   }
 
   return (
-    <div className="flex items-center justify-between">
-      <p className="text-muted-foreground text-sm">페이지 {currentPage}</p>
+    <div className="flex items-center justify-between py-2">
+      {/* 페이지 표시 */}
+      <p className="text-muted-foreground text-sm">
+        <span className="font-medium">{currentPage}</span> 페이지
+      </p>
 
-      <div className="flex gap-2">
+      {/* 페이지 이동 버튼 */}
+      <div className="flex items-center gap-1">
         <Button
           variant="outline"
           size="sm"
           onClick={handlePrevious}
           disabled={currentPage === 1}
+          className="h-8 gap-1 px-3"
         >
-          <ChevronLeft className="mr-1 h-4 w-4" />
+          <ChevronLeft className="h-3.5 w-3.5" />
           이전
         </Button>
+
+        {/* 현재 페이지 번호 표시 */}
+        <div className="bg-muted text-foreground flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium tabular-nums">
+          {currentPage}
+        </div>
 
         <Button
           variant="outline"
           size="sm"
           onClick={handleNext}
           disabled={!hasNext}
+          className="h-8 gap-1 px-3"
         >
           다음
-          <ChevronRight className="ml-1 h-4 w-4" />
+          <ChevronRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

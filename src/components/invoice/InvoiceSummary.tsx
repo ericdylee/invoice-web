@@ -3,10 +3,11 @@
  * 견적서의 총 금액을 강조하여 표시합니다.
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/lib/format'
 import type { Invoice } from '@/types/invoice'
-import { DollarSign } from 'lucide-react'
+import { Receipt } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface InvoiceSummaryProps {
@@ -24,44 +25,56 @@ export function InvoiceSummary({ invoice, className }: InvoiceSummaryProps) {
   return (
     <Card
       className={cn(
-        'shadow-md transition-shadow duration-200 hover:shadow-lg',
+        'overflow-hidden shadow-sm transition-shadow duration-200 hover:shadow-md',
         className
       )}
     >
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <DollarSign className="text-muted-foreground h-5 w-5" />
-          총액
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          {/* 총액 표시 */}
-          <div className="space-y-1">
-            <p className="text-muted-foreground text-sm font-medium">
-              총 견적 금액
-            </p>
-            <p className="text-foreground text-3xl font-bold sm:text-4xl">
+      <CardContent className="p-0">
+        {/* 소계 영역 */}
+        <div className="space-y-3 px-6 pt-6 pb-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground font-medium">공급가액</span>
+            <span className="text-foreground font-medium tabular-nums">
               {formatCurrency(invoice.totalAmount)}
-            </p>
+            </span>
           </div>
-
-          {/* 항목 개수 */}
-          <div className="bg-muted flex items-center gap-2 rounded-lg px-4 py-2">
-            <p className="text-muted-foreground text-sm">총 항목</p>
-            <p className="text-foreground text-lg font-bold">
-              {invoice.items.length}
-            </p>
-            <p className="text-muted-foreground text-sm">개</p>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground font-medium">
+              부가세 (VAT)
+            </span>
+            <span className="text-muted-foreground text-xs tabular-nums">
+              별도 청구
+            </span>
           </div>
         </div>
 
-        {/* 부가세 안내 (추후 기능 확장 시 사용) */}
-        <div className="bg-muted/50 mt-4 rounded-md p-3">
-          <p className="text-muted-foreground text-sm">
-            * 부가세는 별도로 청구됩니다.
-          </p>
+        <Separator />
+
+        {/* 최종 합계 */}
+        <div className="bg-primary/5 px-6 py-5">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2.5">
+              <div className="bg-primary/15 rounded-md p-1.5">
+                <Receipt className="text-primary h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                  최종 견적 금액
+                </p>
+                <p className="text-muted-foreground text-xs">부가세 별도</p>
+              </div>
+            </div>
+
+            {/* 총액 강조 표시 */}
+            <div className="text-right">
+              <p className="text-primary text-3xl font-bold tabular-nums sm:text-4xl">
+                {formatCurrency(invoice.totalAmount)}
+              </p>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                총 {invoice.items.length}개 항목
+              </p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

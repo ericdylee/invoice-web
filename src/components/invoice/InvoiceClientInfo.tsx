@@ -4,6 +4,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import type { Invoice } from '@/types/invoice'
 import { Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -26,26 +27,36 @@ export function InvoiceClientInfo({
   return (
     <Card
       className={cn(
-        'shadow-md transition-shadow duration-200 hover:shadow-lg',
+        'shadow-sm transition-shadow duration-200 hover:shadow-md',
         className
       )}
     >
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <Building2 className="text-muted-foreground h-5 w-5" />
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+          <div className="bg-primary/10 rounded-md p-1.5">
+            <Building2 className="text-primary h-4 w-4" />
+          </div>
           클라이언트 정보
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-3">
-          <div>
-            <p className="text-muted-foreground text-sm font-medium">회사명</p>
-            <p className="text-lg font-semibold">{invoice.clientName}</p>
-          </div>
+      <Separator />
 
-          {/* TODO: 추후 클라이언트 상세 정보 추가 가능 (주소, 담당자, 연락처 등) */}
+      <CardContent className="pt-5 pb-6">
+        {/* 수신처 레이블 */}
+        <div className="flex items-baseline gap-4">
+          <span className="text-muted-foreground w-14 shrink-0 text-xs font-medium tracking-wider uppercase">
+            수신처
+          </span>
+          <p className="text-foreground text-lg leading-snug font-bold">
+            {invoice.clientName}
+            <span className="text-muted-foreground ml-1 text-sm font-normal">
+              귀중
+            </span>
+          </p>
         </div>
+
+        {/* TODO: 추후 클라이언트 상세 정보 추가 가능 (주소, 담당자, 연락처 등) */}
       </CardContent>
     </Card>
   )

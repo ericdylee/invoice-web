@@ -50,34 +50,53 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="bg-muted/30 flex min-h-screen items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="mb-2 flex items-center justify-center">
-            <div className="bg-primary/10 rounded-full p-3">
-              <Lock className="text-primary h-6 w-6" />
-            </div>
+    <div className="bg-muted/20 relative flex min-h-screen items-center justify-center px-4">
+      {/* 배경 장식 */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="bg-primary/5 absolute -top-40 -right-40 h-80 w-80 rounded-full blur-3xl" />
+        <div className="bg-primary/5 absolute -bottom-40 -left-40 h-80 w-80 rounded-full blur-3xl" />
+      </div>
+
+      <Card className="relative w-full max-w-sm shadow-lg">
+        <CardHeader className="space-y-4 pt-6 pb-4 text-center">
+          {/* 로고 아이콘 */}
+          <div className="bg-primary mx-auto flex h-12 w-12 items-center justify-center rounded-xl shadow-md">
+            <Lock className="text-primary-foreground h-5 w-5" />
           </div>
-          <CardTitle className="text-center text-2xl">관리자 로그인</CardTitle>
-          <p className="text-muted-foreground text-center text-sm">
-            견적서 관리 시스템에 접속하려면 비밀번호를 입력하세요
-          </p>
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-bold">관리자 로그인</CardTitle>
+            <p className="text-muted-foreground text-sm">견적서 관리 시스템</p>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+            {/* 비밀번호 입력 */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="password"
+                className="text-foreground text-sm font-medium"
+              >
+                비밀번호
+              </label>
               <Input
+                id="password"
                 type="password"
                 name="password"
-                placeholder="비밀번호"
+                placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
                 disabled={loading}
                 autoFocus
+                className="h-10 transition-shadow focus-visible:shadow-sm"
+                aria-label="관리자 비밀번호"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="mt-2 h-10 w-full font-medium"
+              disabled={loading}
+            >
               {loading ? '로그인 중...' : '로그인'}
             </Button>
           </form>

@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { Footer } from '@/components/layout/footer'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { FileQuestion, Home } from 'lucide-react'
+import { FileQuestion, Home, ArrowLeft } from 'lucide-react'
 
 /**
  * 전역 404 Not Found 페이지
@@ -12,54 +11,45 @@ import { FileQuestion, Home } from 'lucide-react'
  */
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex-1">
-        <div className="container mx-auto px-4 py-16">
-          <div className="mx-auto max-w-4xl">
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileQuestion className="h-5 w-5" />
-                  페이지를 찾을 수 없습니다
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* 404 아이콘 및 숫자 */}
-                <div className="text-center">
-                  <div className="mb-4 flex justify-center">
-                    <FileQuestion className="text-muted-foreground/40 h-24 w-24 sm:h-32 sm:w-32" />
-                  </div>
-                  <p className="text-muted-foreground/60 mb-2 text-8xl font-bold sm:text-9xl">
-                    404
-                  </p>
-                  <p className="text-muted-foreground text-lg">
-                    요청하신 페이지가 존재하지 않습니다.
-                  </p>
-                </div>
+    <div className="bg-muted/20 flex min-h-screen flex-col">
+      <main className="flex flex-1 items-center justify-center px-4 py-16">
+        <div className="mx-auto max-w-md text-center">
+          {/* 404 아이콘 */}
+          <div className="mb-6 flex justify-center">
+            <div className="bg-muted rounded-full p-6">
+              <FileQuestion className="text-muted-foreground h-12 w-12" />
+            </div>
+          </div>
 
-                {/* 확인 사항 */}
-                <div className="bg-muted rounded-lg p-4">
-                  <h3 className="mb-2 font-semibold">확인 사항:</h3>
-                  <ul className="text-muted-foreground ml-4 list-disc space-y-1 text-sm">
-                    <li>URL 주소가 정확한지 확인해 주세요</li>
-                    <li>페이지가 삭제되었거나 이동되었을 수 있습니다</li>
-                    <li>
-                      북마크나 링크가 오래된 경우 업데이트가 필요할 수 있습니다
-                    </li>
-                  </ul>
-                </div>
+          {/* 404 숫자 */}
+          <p className="text-primary/30 mb-2 text-8xl font-black tabular-nums sm:text-9xl">
+            404
+          </p>
 
-                {/* 액션 버튼 */}
-                <div className="flex justify-center pt-2">
-                  <Button asChild size="lg">
-                    <Link href="/">
-                      <Home className="mr-2 h-4 w-4" />
-                      홈으로 돌아가기
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {/* 제목 및 설명 */}
+          <h1 className="text-foreground mb-3 text-xl font-bold">
+            페이지를 찾을 수 없습니다
+          </h1>
+          <p className="text-muted-foreground mb-8 text-sm leading-relaxed">
+            요청하신 페이지가 존재하지 않거나 이동되었을 수 있습니다.
+            <br />
+            URL 주소를 다시 확인해 주세요.
+          </p>
+
+          {/* 액션 버튼 */}
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button asChild size="default">
+              <Link href="/">
+                <Home className="mr-2 h-4 w-4" />
+                홈으로 돌아가기
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="default">
+              <Link href="javascript:history.back()">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                이전 페이지
+              </Link>
+            </Button>
           </div>
         </div>
       </main>

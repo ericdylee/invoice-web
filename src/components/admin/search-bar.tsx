@@ -44,23 +44,25 @@ export function SearchBar({ defaultValue = '' }: SearchBarProps) {
   }
 
   return (
-    <div className="relative w-full sm:w-96">
-      <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+    <div className="relative w-full sm:max-w-sm">
+      <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
       <Input
         type="text"
         placeholder="클라이언트명 또는 견적서 번호 검색..."
         value={query}
         onChange={e => setQuery(e.target.value)}
-        className="pr-10 pl-10"
+        className="h-9 pr-9 pl-9 text-sm transition-shadow focus-visible:shadow-sm"
+        aria-label="견적서 검색"
       />
       {query && (
         <Button
           variant="ghost"
           size="sm"
           onClick={handleClear}
-          className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0"
+          className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0 opacity-70 hover:opacity-100"
+          aria-label="검색어 지우기"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </Button>
       )}
     </div>

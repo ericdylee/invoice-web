@@ -77,9 +77,19 @@ export function PDFDownloadButton({
       onClick={handleDownload}
       disabled={isLoading}
       size={size}
-      className={cn('gap-2', className)}
+      className={cn(
+        'gap-2 transition-all duration-200',
+        isLoading && 'opacity-80',
+        className
+      )}
+      aria-label="견적서 PDF 다운로드"
     >
-      <Download className="h-4 w-4" />
+      <Download
+        className={cn(
+          'h-4 w-4 transition-transform duration-200',
+          isLoading && 'animate-bounce'
+        )}
+      />
       {isLoading ? 'PDF 생성 중...' : 'PDF 다운로드'}
     </Button>
   )
