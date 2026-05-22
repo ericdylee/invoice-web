@@ -9,6 +9,7 @@
 - **노션 데이터베이스 연동**: Notion API를 통해 견적서 데이터를 실시간으로 조회하여 별도 DB 구축 없이 견적서 관리
 - **고유 URL 기반 견적서 조회**: 노션 페이지 ID 기반 고유 URL로 클라이언트가 견적서를 손쉽게 확인
 - **PDF 다운로드**: 견적서를 원클릭으로 PDF 파일로 변환하여 다운로드
+- **관리자 패널**: 비밀번호 인증 기반 어드민 패널에서 발행한 견적서 목록 조회, 검색, 필터링, 공유 링크 관리
 
 ## 개발 워크플로우
 
@@ -47,10 +48,10 @@
 ### Phase 1: 애플리케이션 골격 구축 ✅
 
 - **Task 001: 프로젝트 구조 및 라우팅 설정** ✅
-  - ✅ Next.js 15 App Router 기반 전체 라우트 구조 생성 (`/invoice/[notionPageId]`)
-  - ✅ 견적서 조회 페이지의 빈 껍데기 파일 생성 (`src/app/invoice/[notionPageId]/page.tsx`)
+  - ✅ Next.js 15 App Router 기반 전체 라우트 구조 생성 (`/invoice/[id]`)
+  - ✅ 견적서 조회 페이지의 빈 껍데기 파일 생성 (`src/app/invoice/[id]/page.tsx`)
   - ✅ 루트 레이아웃 및 글로벌 메타데이터 설정 (`src/app/layout.tsx`)
-  - ✅ 404 not-found 페이지 골격 생성 (`src/app/not-found.tsx`, `src/app/invoice/[notionPageId]/not-found.tsx`)
+  - ✅ 404 not-found 페이지 골격 생성 (`src/app/not-found.tsx`, `src/app/invoice/[id]/not-found.tsx`)
   - ✅ 루트 페이지(`/`) 안내용 placeholder 구성
   - ✅ 환경 변수 템플릿 정리 (`.env.local.example`에 `NOTION_API_KEY`, `NOTION_DATABASE_ID` 명시)
 
@@ -134,6 +135,27 @@
   - ✅ 운영 가이드 문서화 (`docs/admin-guide.md`, `docs/deployment-checklist.md` 최신화)
   - ✅ 프로덕션 환경에서의 최종 스모크 테스트 수행
 
+### Phase 5: 관리자 패널 (MVP 범위 외 확장 기능) ✅
+
+> PRD의 MVP 범위에는 별도의 관리자 페이지가 포함되지 않았으나, 견적서 운영 편의를 위해 추가로 구현된 확장 기능입니다.
+
+- **Task 011: 관리자 인증 및 세션 관리** ✅
+  - ✅ 비밀번호 기반 관리자 로그인 페이지 구현 (`src/app/(auth)/admin-login/page.tsx`)
+  - ✅ 로그인 Server Action 및 비밀번호 검증 로직 (`src/lib/auth/password.ts`)
+  - ✅ JWT(jose) 기반 세션 발급/검증 구현 (`src/lib/auth/session.ts`)
+  - ✅ Next.js Middleware로 `/admin` 경로 인증 가드 및 API Rate Limiting 적용 (`src/middleware.ts`)
+  - ✅ 로그아웃 기능 구현 (`src/components/admin/logout-button.tsx`)
+
+- **Task 012: 관리자 대시보드 및 견적서 목록** ✅
+  - ✅ 관리자 대시보드 홈 페이지 구현 (`src/app/admin/page.tsx`)
+  - ✅ 관리자 레이아웃 및 헤더/네비게이션 구현 (`src/app/admin/layout.tsx`, `admin-header.tsx`, `admin-nav.tsx`)
+  - ✅ 견적서 목록 페이지 및 테이블 구현 (`src/app/admin/invoices/page.tsx`, `invoice-table.tsx`)
+  - ✅ 견적서 검색/필터/페이지네이션 기능 구현 (`search-bar.tsx`, `filter-panel.tsx`, `pagination.tsx`)
+  - ✅ 견적서 공유 링크 표시/복사 기능 구현 (`share-button.tsx`, `copy-button.tsx`, `link-display.tsx`)
+  - ✅ 견적서 서비스 레이어 구현 (`src/lib/services/invoice.service.ts`)
+  - ✅ 어드민 패널 모바일 반응형 레이아웃 적용 (`hidden md:block` 기반 사이드/헤더 대응)
+  - ✅ Playwright MCP로 관리자 로그인 → 목록 조회 → 검색 플로우 E2E 검증
+
 ## MVP 체크리스트
 
 ### 핵심 기능
@@ -166,6 +188,8 @@ Task 001 → Task 002 → Task 003 → Task 004 → Task 005
                           Task 006 ──→ Task 007 → Task 008 → Task 008-1
                                                               ↓
                                                      Task 009 → Task 010
+                                                              ↓
+                                                     Task 011 → Task 012  (관리자 패널)
 ```
 
 ## 위험 요소 및 대응 방안
@@ -184,5 +208,5 @@ Task 001 → Task 002 → Task 003 → Task 004 → Task 005
 
 ---
 
-**📊 진행 상황**: 전체 프로젝트 완료 🎊 (Phase 1-4 전체 완성 ✅)
+**📊 진행 상황**: 전체 프로젝트 완료 🎊 (Phase 1-5 전체 완성 ✅ — MVP 핵심 기능 + 관리자 패널 확장)
 **📅 최종 업데이트**: 2026-05-22
