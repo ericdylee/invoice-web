@@ -15,9 +15,10 @@
  * formatDate('2025-10-07', 'numeric') // "2025-10-07"
  */
 export function formatDate(
-  date: string | Date,
+  date: string | Date | null | undefined,
   format: 'long' | 'short' | 'numeric' = 'long'
 ): string {
+  if (date == null) return '-'
   const dateObj = typeof date === 'string' ? new Date(date) : date
 
   // 유효하지 않은 날짜 처리
