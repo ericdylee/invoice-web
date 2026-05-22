@@ -35,7 +35,7 @@ export function AdminNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="bg-muted/5 min-h-[calc(100vh-3.5rem)] w-56 shrink-0 border-r">
+    <nav className="bg-muted/5 hidden min-h-[calc(100vh-3.5rem)] w-56 shrink-0 border-r md:block">
       {/* 네비게이션 섹션 레이블 */}
       <div className="px-4 pt-5 pb-2">
         <p className="text-muted-foreground text-[10px] font-semibold tracking-widest uppercase">

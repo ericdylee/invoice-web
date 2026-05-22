@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex">
         <AdminNav />
         {/* 메인 콘텐츠 영역 */}
-        <main className="min-w-0 flex-1 px-8 py-6">{children}</main>
+        <main className="min-w-0 flex-1 px-4 py-6 md:px-8">{children}</main>
       </div>
     </div>
   )

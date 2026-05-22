@@ -53,3 +53,9 @@ test-notion-*.js
 
 # Shrimp Task Manager
 shrimp_data/
+
+# Test screenshots
+*.png
+
+# Superpowers brainstorm cache
+.superpowers/
