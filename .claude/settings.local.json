@@ -16,6 +16,9 @@
     "deny": [],
     "ask": []
   },
+  "env": {
+    "SLACK_WEBHOOK_URL": ""
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "playwright",
