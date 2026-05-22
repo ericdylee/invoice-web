@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist_Mono, Noto_Sans_KR } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider } from '@/components/providers/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 
-// 한글 폰트 최적화: Noto Sans KR (Google Fonts)
 const notoSansKR = Noto_Sans_KR({
   subsets: ['latin'],
   display: 'swap',
@@ -31,17 +29,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" suppressHydrationWarning className={notoSansKR.variable}>
-      <body className={`${geistMono.variable} font-sans antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+    <html
+      lang="ko"
+      className={`dark ${notoSansKR.variable} ${geistMono.variable}`}
+    >
+      <body className="font-sans antialiased">
+        {children}
+        <Toaster />
       </body>
     </html>
   )
