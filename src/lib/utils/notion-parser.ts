@@ -31,12 +31,15 @@ export function transformNotionToInvoice(
     props.발행일?.date?.start || new Date().toISOString().split('T')[0]
   const validUntil =
     props.유효기간?.date?.start || getDefaultValidUntil(issueDate)
-  const totalAmount =
-    props['총 금액']?.number || calculateTotalFromItems(itemPages)
   const status = mapKoreanStatus(props.상태?.select?.name)
 
   // 항목 변환
   const items = itemPages.map(transformNotionToItem)
+
+  // 총 금액은 항상 견적 항목들의 금액 합계로 자동 계산
+  // (Notion '총 금액' 필드는 항목 합산과 불일치할 수 있어 신뢰하지 않음)
+  // 화면에 표시되는 항목 금액(item.amount)을 그대로 합산하여 일관성 보장
+  const totalAmount = calculateTotalFromItems(items)
 
   return {
     id: page.id,
@@ -128,16 +131,11 @@ function getDefaultValidUntil(issueDate: string): string {
 
 /**
  * 항목들의 금액 합계 계산
- * @param itemPages - 항목 페이지 배열
- * @returns 총 금액
+ * @param items - 변환된 견적 항목 배열
+ * @returns 총 금액 (각 항목 amount의 합)
  */
-function calculateTotalFromItems(
-  itemPages: Array<NotionPage & { properties: ItemPageProperties }>
-): number {
-  return itemPages.reduce((total, page) => {
-    const amount = page.properties.금액?.number || 0
-    return total + amount
-  }, 0)
+function calculateTotalFromItems(items: InvoiceItem[]): number {
+  return items.reduce((total, item) => total + item.amount, 0)
 }
 
 /**
