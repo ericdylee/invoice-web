@@ -14,6 +14,10 @@ const CACHE_CONFIG = {
   INVOICE_REVALIDATE: 60,
   /** 캐시 태그 - revalidateTag로 특정 캐시 무효화 시 사용 */
   INVOICE_TAGS: ['invoice'],
+  /** 통계 캐시 재검증 시간 (초) - 전체 스캔 비용 완화를 위해 300초 */
+  STATS_REVALIDATE: 300,
+  /** 통계 캐시 태그 - 향후 write 도입 시 revalidateTag('invoice-stats') 연동 */
+  STATS_TAGS: ['invoice', 'invoice-stats'],
 } as const
 
 /**
@@ -42,6 +46,27 @@ export function createCachedInvoiceFetcher(
       tags: ['invoice'], // 태그 기반 무효화
     }
   )
+}
+
+/**
+ * 통계 조회 함수를 캐싱 기능이 추가된 함수로 래핑
+ * 전체 견적서 스캔(N+1) 비용을 완화하기 위해 긴 revalidate(300초)와
+ * 태그 기반 무효화를 적용합니다. 짧은 시간 내 재진입 시 전체 스캔이 반복되지 않습니다.
+ *
+ * @param fetcher - 원본 통계 집계 함수 (인자 없음)
+ * @returns 캐싱이 적용된 통계 조회 함수
+ *
+ * @example
+ * ```typescript
+ * const cachedStats = createCachedStatsFetcher(() => getInvoiceStats())
+ * const stats = await cachedStats()
+ * ```
+ */
+export function createCachedStatsFetcher<T>(fetcher: () => Promise<T>) {
+  return unstable_cache(fetcher, ['invoice-stats'], {
+    revalidate: CACHE_CONFIG.STATS_REVALIDATE,
+    tags: [...CACHE_CONFIG.STATS_TAGS],
+  })
 }
 
 /**

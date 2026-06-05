@@ -11,6 +11,7 @@ import { Suspense } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FileSearch, FileX } from 'lucide-react'
 import type { InvoiceStatus } from '@/types/invoice'
+import { generateInvoiceUrl } from '@/lib/utils/link-generator'
 
 interface InvoicesPageProps {
   searchParams: Promise<{
@@ -48,7 +49,7 @@ async function InvoiceListContent({
   )
 
   const { invoices, nextCursor, hasMore } = hasFilters
-    ? await searchInvoices(filters, 10, cursor)
+    ? await searchInvoices(filters, 10, cursor, sort)
     : await getInvoicesFromNotion(10, cursor, sort)
 
   if (invoices.length === 0) {
@@ -71,9 +72,14 @@ async function InvoiceListContent({
     )
   }
 
+  // 클라이언트 테이블이 env에 의존하지 않도록 공개 URL을 서버에서 사전 생성
+  const urls = Object.fromEntries(
+    invoices.map(invoice => [invoice.id, generateInvoiceUrl(invoice.id)])
+  )
+
   return (
     <div className="space-y-4">
-      <InvoiceTable invoices={invoices} currentSort={sort} />
+      <InvoiceTable invoices={invoices} urls={urls} currentSort={sort} />
       <Pagination
         currentPage={page}
         hasNext={hasMore}

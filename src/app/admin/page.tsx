@@ -5,8 +5,12 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { FileText, Users, Clock, ArrowRight, BookOpen } from 'lucide-react'
 import Link from 'next/link'
+import { Suspense } from 'react'
+import { getOptimizedInvoiceStats } from '@/lib/services/invoice.service'
+import { DashboardStats } from '@/components/admin/dashboard-stats'
 
 /**
  * 대시보드 기능 카드 데이터
@@ -39,6 +43,44 @@ const featureCards = [
 ]
 
 /**
+ * 통계 로딩 스켈레톤
+ */
+function StatsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Skeleton className="h-[72px] w-full" />
+        <Skeleton className="h-[72px] w-full" />
+        <Skeleton className="h-[72px] w-full" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-44 w-full" />
+        <Skeleton className="h-44 w-full" />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * 통계 섹션 (서버에서 stats 페치)
+ * 집계 실패 시 안전하게 안내 메시지를 표시한다.
+ */
+async function StatsSection() {
+  try {
+    const stats = await getOptimizedInvoiceStats()
+    return <DashboardStats stats={stats} />
+  } catch {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="text-muted-foreground py-6 text-center text-sm">
+          통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+        </CardContent>
+      </Card>
+    )
+  }
+}
+
+/**
  * 관리자 대시보드 페이지
  */
 export default function AdminPage() {
@@ -53,6 +95,16 @@ export default function AdminPage() {
         <p className="text-muted-foreground mt-1 text-sm">
           견적서 관리 시스템에 오신 것을 환영합니다
         </p>
+      </div>
+
+      {/* 운영 통계 */}
+      <div>
+        <h2 className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase">
+          운영 현황
+        </h2>
+        <Suspense fallback={<StatsSkeleton />}>
+          <StatsSection />
+        </Suspense>
       </div>
 
       {/* 주요 기능 카드 */}

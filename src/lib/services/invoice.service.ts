@@ -3,7 +3,11 @@
  * 견적서 데이터 조회 및 처리 로직
  */
 
-import { createCachedInvoiceFetcher, getInvoiceWithDedup } from '@/lib/cache'
+import {
+  createCachedInvoiceFetcher,
+  createCachedStatsFetcher,
+  getInvoiceWithDedup,
+} from '@/lib/cache'
 import { ERROR_MESSAGES } from '@/lib/constants'
 import { logger } from '@/lib/logger'
 import { getDataSourceId, notion } from '@/lib/notion'
@@ -223,6 +227,34 @@ export interface InvoiceListResult {
 }
 
 /**
+ * Notion dataSources.query 결과 results 타입
+ */
+type DataSourceQueryResults = Awaited<
+  ReturnType<typeof notion.dataSources.query>
+>['results']
+
+/**
+ * Notion 쿼리 결과 페이지들을 Invoice 배열로 변환 (항목 병렬 조회 포함)
+ * 목록·검색·전체 스캔에서 공유하는 내부 헬퍼 (변환 로직 중복 제거)
+ * @param results - dataSources.query 응답의 results 배열
+ * @returns 변환된 Invoice 배열
+ */
+async function transformPagesToInvoices(
+  results: DataSourceQueryResults
+): Promise<Invoice[]> {
+  return Promise.all(
+    results
+      .filter((page): page is NotionPage => 'properties' in page)
+      .filter(isInvoicePage)
+      .map(async page => {
+        const itemIds = page.properties.항목?.relation?.map(r => r.id) || []
+        const items = await fetchInvoiceItems(itemIds)
+        return transformNotionToInvoice(page, items)
+      })
+  )
+}
+
+/**
  * Notion 데이터베이스에서 견적서 목록 조회
  * @param pageSize - 페이지당 항목 수 (기본값: 10, 최대: 100)
  * @param startCursor - 페이지네이션 시작 커서
@@ -260,16 +292,7 @@ export async function getInvoicesFromNotion(
     })
 
     // 병렬 처리로 모든 견적서의 항목 조회
-    const invoices = await Promise.all(
-      response.results
-        .filter((page): page is NotionPage => 'properties' in page)
-        .filter(isInvoicePage)
-        .map(async page => {
-          const itemIds = page.properties.항목?.relation?.map(r => r.id) || []
-          const items = await fetchInvoiceItems(itemIds)
-          return transformNotionToInvoice(page, items)
-        })
-    )
+    const invoices = await transformPagesToInvoices(response.results)
 
     logger.info('견적서 목록 조회 성공', {
       count: invoices.length,
@@ -298,17 +321,23 @@ export async function getInvoicesFromNotion(
  * @param filters - 검색 필터 (검색어, 상태, 날짜 범위)
  * @param pageSize - 페이지당 항목 수 (기본값: 10, 최대: 100)
  * @param startCursor - 페이지네이션 시작 커서
+ * @param sortBy - 정렬 기준 ('issue_date' | 'total_amount')
  * @returns InvoiceListResult 객체
  * @throws Error - 검색 실패 시
  */
 export async function searchInvoices(
   filters: InvoiceFilters,
   pageSize: number = 10,
-  startCursor?: string
+  startCursor?: string,
+  sortBy?: 'issue_date' | 'total_amount'
 ): Promise<InvoiceListResult> {
   try {
     // Notion API 페이지 크기 제한 (최대 100)
     const limitedPageSize = Math.min(pageSize, 100)
+
+    // 정렬 속성 매핑 (getInvoicesFromNotion과 동일한 매핑/방향 유지)
+    const sortProperty = sortBy === 'issue_date' ? '발행일' : '총 금액'
+    const sortDirection = 'descending' as const
 
     // Notion Filter 배열 구성
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -376,28 +405,20 @@ export async function searchInvoices(
           : undefined,
       sorts: [
         {
-          property: '발행일',
-          direction: 'descending',
+          property: sortProperty,
+          direction: sortDirection,
         },
       ],
     })
 
     // 병렬 처리로 모든 견적서의 항목 조회
-    const invoices = await Promise.all(
-      response.results
-        .filter((page): page is NotionPage => 'properties' in page)
-        .filter(isInvoicePage)
-        .map(async page => {
-          const itemIds = page.properties.항목?.relation?.map(r => r.id) || []
-          const items = await fetchInvoiceItems(itemIds)
-          return transformNotionToInvoice(page, items)
-        })
-    )
+    const invoices = await transformPagesToInvoices(response.results)
 
     logger.info('견적서 검색 성공', {
       count: invoices.length,
       hasMore: response.has_more,
       filters,
+      sortBy,
     })
 
     return {
@@ -415,4 +436,134 @@ export async function searchInvoices(
     })
     throw new Error('견적서 검색에 실패했습니다')
   }
+}
+
+/**
+ * 전체 견적서를 커서 루프로 순회 조회 (항목 포함)
+ * `has_more`가 false가 될 때까지 반복하며 전체 데이터셋을 수집한다.
+ * 전체 스캔 + 항목 조회(N+1)로 비용이 크므로 반드시 캐싱과 함께 사용한다.
+ * @returns 전체 Invoice 배열
+ */
+async function fetchAllInvoices(): Promise<Invoice[]> {
+  const dataSourceId = await getDataSourceId()
+  const all: Invoice[] = []
+  let startCursor: string | undefined = undefined
+
+  do {
+    const response = await notion.dataSources.query({
+      data_source_id: dataSourceId,
+      page_size: 100,
+      start_cursor: startCursor,
+    })
+
+    const invoices = await transformPagesToInvoices(response.results)
+    all.push(...invoices)
+
+    startCursor = response.has_more
+      ? (response.next_cursor ?? undefined)
+      : undefined
+  } while (startCursor)
+
+  return all
+}
+
+/**
+ * 상태별 집계 결과 (건수 + 비율)
+ */
+export interface InvoiceStatusBreakdown {
+  /** 해당 상태 견적서 건수 */
+  count: number
+  /** 전체 대비 비율 (0~1) */
+  ratio: number
+}
+
+/**
+ * 관리자 대시보드 통계 결과
+ */
+export interface InvoiceStats {
+  /** 총 견적서 수 */
+  total: number
+  /** 총 견적 금액 합계 (item 기반 정확 집계) */
+  totalAmount: number
+  /** 상태별 분포 (대기/승인/거절) */
+  byStatus: Record<InvoiceStatus, InvoiceStatusBreakdown>
+  /** 최근 발행 견적서 (발행일 내림차순) */
+  recent: Invoice[]
+}
+
+/**
+ * 관리자 대시보드 운영 통계 집계
+ * 전체 견적서를 순회하며 item 기반 총액을 합산하여 목록/상세와 100% 일치시킨다.
+ * @param recentCount - 최근 발행 건 표시 개수 (기본값: 5)
+ * @returns InvoiceStats 객체
+ * @throws Error - 집계 실패 시
+ */
+export async function getInvoiceStats(
+  recentCount: number = 5
+): Promise<InvoiceStats> {
+  try {
+    const invoices = await fetchAllInvoices()
+    const total = invoices.length
+
+    const counts: Record<InvoiceStatus, number> = {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+    }
+    let totalAmount = 0
+
+    for (const invoice of invoices) {
+      counts[invoice.status] += 1
+      totalAmount += invoice.totalAmount
+    }
+
+    const toBreakdown = (count: number): InvoiceStatusBreakdown => ({
+      count,
+      ratio: total > 0 ? count / total : 0,
+    })
+
+    // 최근 발행 건 (발행일 내림차순)
+    const recent = [...invoices]
+      .sort((a, b) => b.issueDate.localeCompare(a.issueDate))
+      .slice(0, recentCount)
+
+    logger.info('견적서 통계 집계 성공', {
+      total,
+      totalAmount,
+    })
+
+    return {
+      total,
+      totalAmount,
+      byStatus: {
+        pending: toBreakdown(counts.pending),
+        approved: toBreakdown(counts.approved),
+        rejected: toBreakdown(counts.rejected),
+      },
+      recent,
+    }
+  } catch (error) {
+    const errorObj = error as Error
+    logger.error('견적서 통계 집계 실패', {
+      error: errorObj.message,
+      stack: errorObj.stack,
+      name: errorObj.name,
+    })
+    throw new Error('견적서 통계를 불러올 수 없습니다')
+  }
+}
+
+/**
+ * 캐싱이 적용된 견적서 통계 조회 함수
+ * unstable_cache로 300초간 캐싱되어 짧은 시간 내 재진입 시 전체 스캔이 반복되지 않는다.
+ */
+const getCachedInvoiceStats = createCachedStatsFetcher(() => getInvoiceStats())
+
+/**
+ * 최적화된(캐싱 적용) 견적서 통계 조회
+ * 대시보드에서 사용하는 메인 함수
+ * @returns InvoiceStats 객체
+ */
+export async function getOptimizedInvoiceStats(): Promise<InvoiceStats> {
+  return getCachedInvoiceStats()
 }
