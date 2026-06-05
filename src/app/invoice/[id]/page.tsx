@@ -5,6 +5,7 @@ import { InvoiceTable } from '@/components/invoice/InvoiceTable'
 import { InvoiceSummary } from '@/components/invoice/InvoiceSummary'
 import { PDFDownloadButton } from '@/components/invoice/PDFDownloadButton'
 import { InvoiceSkeleton } from '@/components/invoice/InvoiceSkeleton'
+import { ViewTracker } from '@/components/invoice/view-tracker'
 import { getOptimizedInvoice } from '@/lib/services/invoice.service'
 import {
   isValidNotionPageId,
@@ -80,6 +81,8 @@ async function InvoiceContent({ id }: { id: string }) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* 열람 추적 비콘 (렌더 없음) */}
+      <ViewTracker id={normalizedId} />
       <main className="bg-muted/20 flex-1">
         <div className="container mx-auto px-4 py-8 sm:py-12">
           {/* 페이지 타이틀 */}

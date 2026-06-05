@@ -41,6 +41,10 @@ export function transformNotionToInvoice(
   // 화면에 표시되는 항목 금액(item.amount)을 그대로 합산하여 일관성 보장
   const totalAmount = calculateTotalFromItems(items)
 
+  // 열람 추적 (선택 속성 — 미존재 시 미열람으로 처리)
+  const lastViewedAt = props['최근 열람일']?.date?.start ?? null
+  const viewCount = props.조회수?.number ?? 0
+
   return {
     id: page.id,
     invoiceNumber,
@@ -50,6 +54,8 @@ export function transformNotionToInvoice(
     totalAmount,
     status,
     items,
+    lastViewedAt,
+    viewCount,
   }
 }
 

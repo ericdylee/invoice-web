@@ -65,6 +65,8 @@ export function generateMockInvoice(): Invoice {
     items,
     totalAmount,
     status: 'pending',
+    lastViewedAt: null,
+    viewCount: 0,
   }
 }
 

@@ -6,7 +6,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Wallet, Clock } from 'lucide-react'
+import { FileText, Wallet, Clock, EyeOff } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/format'
 import type { InvoiceStats } from '@/lib/services/invoice.service'
 import type { InvoiceStatus } from '@/types/invoice'
@@ -77,7 +77,7 @@ export function DashboardStats({ stats }: { stats: InvoiceStats }) {
   return (
     <div className="space-y-4">
       {/* 요약 지표 카드 */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
           icon={FileText}
           label="총 견적서"
@@ -98,6 +98,13 @@ export function DashboardStats({ stats }: { stats: InvoiceStats }) {
           value={`${stats.byStatus.pending.count}건`}
           color="text-amber-600 dark:text-amber-400"
           bgColor="bg-amber-100 dark:bg-amber-900/30"
+        />
+        <SummaryCard
+          icon={EyeOff}
+          label="미열람"
+          value={`${stats.unviewed}건`}
+          color="text-rose-600 dark:text-rose-400"
+          bgColor="bg-rose-100 dark:bg-rose-900/30"
         />
       </div>
 

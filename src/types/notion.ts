@@ -58,6 +58,16 @@ export interface InvoicePageProperties {
     type: 'relation'
     relation: Array<{ id: string }>
   }
+  /** 최근 열람일 (Date 속성, 선택 — 열람 추적용) */
+  '최근 열람일'?: {
+    type: 'date'
+    date: { start: string } | null
+  }
+  /** 조회수 (Number 속성, 선택 — 열람 추적용) */
+  조회수?: {
+    type: 'number'
+    number: number | null
+  }
 }
 
 /**

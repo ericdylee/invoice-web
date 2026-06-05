@@ -47,6 +47,10 @@ export interface Invoice {
   totalAmount: number
   /** 견적서 상태 (대기/승인/거절) */
   status: InvoiceStatus
+  /** 최근 열람일 (ISO 8601, 미열람 시 null) — 열람 추적 */
+  lastViewedAt?: string | null
+  /** 누적 조회수 (미열람 시 0) — 열람 추적 */
+  viewCount: number
 }
 
 /**

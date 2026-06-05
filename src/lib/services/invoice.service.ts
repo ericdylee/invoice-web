@@ -215,6 +215,41 @@ export async function getOptimizedInvoice(pageId: string): Promise<Invoice> {
 }
 
 /**
+ * 견적서 열람 기록 (Notion write)
+ * 공개 페이지 열람 시 `최근 열람일`을 현재 시각으로 갱신하고 `조회수`를 1 증가시킨다.
+ * Notion은 atomic increment를 지원하지 않으므로 read-then-write 방식이며,
+ * 솔로·저트래픽 가정에서 동시성 race는 무시한다.
+ * 추적 실패가 페이지 동작을 깨지 않도록 에러를 swallow(로깅만)한다.
+ * @param pageId - 견적서 페이지 ID
+ */
+export async function recordInvoiceView(pageId: string): Promise<void> {
+  try {
+    await withRetry(async () => {
+      // 현재 조회수 조회 (속성 미존재 시 0)
+      const page = await fetchInvoicePage(pageId)
+      const current = page.properties.조회수?.number ?? 0
+
+      await notion.pages.update({
+        page_id: pageId,
+        properties: {
+          '최근 열람일': { date: { start: new Date().toISOString() } },
+          조회수: { number: current + 1 },
+        },
+      })
+    })
+
+    logger.info('견적서 열람 기록 성공', { pageId })
+  } catch (error) {
+    // 추적 실패는 사용자 경험에 영향 주지 않도록 로깅만 (쓰기 권한/속성 미비 포함)
+    const errorObj = error as Error
+    logger.warn('견적서 열람 기록 실패', {
+      pageId,
+      error: errorObj.message,
+    })
+  }
+}
+
+/**
  * 견적서 목록 조회 결과 인터페이스
  */
 export interface InvoiceListResult {
@@ -487,6 +522,8 @@ export interface InvoiceStats {
   totalAmount: number
   /** 상태별 분포 (대기/승인/거절) */
   byStatus: Record<InvoiceStatus, InvoiceStatusBreakdown>
+  /** 아직 한 번도 열람되지 않은 견적서 수 (viewCount === 0) */
+  unviewed: number
   /** 최근 발행 견적서 (발행일 내림차순) */
   recent: Invoice[]
 }
@@ -511,10 +548,14 @@ export async function getInvoiceStats(
       rejected: 0,
     }
     let totalAmount = 0
+    let unviewed = 0
 
     for (const invoice of invoices) {
       counts[invoice.status] += 1
       totalAmount += invoice.totalAmount
+      if (invoice.viewCount === 0) {
+        unviewed += 1
+      }
     }
 
     const toBreakdown = (count: number): InvoiceStatusBreakdown => ({
@@ -540,6 +581,7 @@ export async function getInvoiceStats(
         approved: toBreakdown(counts.approved),
         rejected: toBreakdown(counts.rejected),
       },
+      unviewed,
       recent,
     }
   } catch (error) {

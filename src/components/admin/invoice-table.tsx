@@ -185,6 +185,9 @@ export function InvoiceTable({
               <TableHead className="w-[90px] text-xs font-semibold tracking-wider uppercase">
                 상태
               </TableHead>
+              <TableHead className="w-[120px] text-xs font-semibold tracking-wider uppercase">
+                열람
+              </TableHead>
               <TableHead className="w-[220px] text-xs font-semibold tracking-wider uppercase">
                 링크
               </TableHead>
@@ -239,6 +242,25 @@ export function InvoiceTable({
                     >
                       {statusConfig[invoice.status].label}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {invoice.lastViewedAt ? (
+                      <div className="flex flex-col leading-tight">
+                        <span className="text-muted-foreground text-sm tabular-nums">
+                          {formatDate(invoice.lastViewedAt, 'short')}
+                        </span>
+                        <span className="text-muted-foreground/70 text-xs tabular-nums">
+                          {invoice.viewCount}회 열람
+                        </span>
+                      </div>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="text-muted-foreground border-dashed text-xs"
+                      >
+                        미열람
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
