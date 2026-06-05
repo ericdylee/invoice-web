@@ -54,14 +54,21 @@ export function PDFDownloadButton({
       const blob = await response.blob()
 
       // 4단계: 다운로드 트리거
+      // 앵커를 DOM에 추가해야 일부 브라우저(Firefox 등)에서 click() 다운로드가 동작함
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = `invoice-${sanitizeFilename(invoice.invoiceNumber)}.pdf`
+      a.style.display = 'none'
+      document.body.appendChild(a)
       a.click()
 
       // 5단계: 리소스 정리
-      URL.revokeObjectURL(url)
+      // 브라우저가 blob을 다 읽기 전에 revoke하면 파일이 손상되므로 다음 틱으로 지연
+      setTimeout(() => {
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 0)
 
       toast.success('PDF 다운로드가 완료되었습니다')
     } catch (error) {
